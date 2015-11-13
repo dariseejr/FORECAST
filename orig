@@ -1,0 +1,78 @@
+var UI = require('ui');
+var ajax = require ('ajax');
+var myAPIkey = '771062033074aa6e';
+
+var Vector2 = require ('vector2');
+
+var parseFeed = function(data, quantity) {
+  var items = [];
+  for(var i = 0; i < quantity; i++) {
+    // Always uppercase the description string
+    var title = data.txt_forecast[i].forecastday[1].icon;
+    title = title.CharAt(0).toUpperCase() + title.substring(1);
+   
+
+  //Get date/time substring
+    var time = data.simpleforecast[i].forecastday[1].date.pretty;
+   
+    //Add to menu items array
+    items.push({
+      title:title, 
+      subtitle:time
+      });
+  
+  }
+  //Return the array
+  return items;
+};
+
+
+// Splash screen while waiting for data retrieval
+var splashWindow = new UI.Window();
+
+// Text element
+var text = new UI.Text({
+  position: new Vector2(0, 0),
+  size: new Vector2(144, 168),
+  text: 'Downloading weather data...',
+  font: 'GOTHIC_28_BOLD',
+  color: 'black',
+  textOverflow: 'wrap',
+  textAlign: 'center',
+  backgroundColor: 'white'
+});
+
+// Add to splashWindow and show
+splashWindow.add(text);
+splashWindow.show();
+
+// Make request to openweathermap
+ajax(
+{
+  url: 'http://api.wunderground.com/api/' + myAPIkey + '/forecast/q/CA/San_Francisco.json',
+  type: 'json'
+},
+function(data) {
+  // Create an array of Menu items
+var menuItems = parseFeed(data, 10);
+
+for(var i = 0; i < menuItems.length; i++) {
+  console.log(menuItems[i].title + ' | ' + menuItems[i].subtitle);
+}
+
+},
+function(error) {
+  console.log('Download failed: ' + error);
+  }
+);
+
+
+//Construct Menu
+var resultsMenu = new UI.Menu({
+  sections: [{
+    title: 'Current Forecast',
+  }]
+});
+
+resultsMenu.show();
+splashWindow.hide();
